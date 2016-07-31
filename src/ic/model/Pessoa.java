@@ -43,6 +43,9 @@ public class Pessoa {
 	public void setResultado(String resultado) {
 		this.resultado = resultado;
 	}
+	public String getId() {
+		return getCodPessoa() + "-" + getTurma().getCodTurma();
+	}
 	
 	@Override
 	public String toString() {

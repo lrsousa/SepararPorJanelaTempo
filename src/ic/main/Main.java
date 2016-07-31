@@ -2,7 +2,13 @@ package ic.main;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import ic.model.Evento;
@@ -12,8 +18,11 @@ import ic.model.Pessoa;
 import ic.model.Turma;
 
 public class Main {
+	static String nomeArquivo = "LogsMatAdm";
+	static String extensao = ".csv";
+	
 	public static void main(String[] args) throws IOException, Exception {
-		LeitorCsv csv = new LeitorCsv("../LogsMatAdm.csv");
+		LeitorCsv csv = new LeitorCsv("../" + nomeArquivo + extensao);
 		BufferedReader br = csv.getFileToRead();
 		br.readLine();
 
@@ -28,18 +37,19 @@ public class Main {
 		evento = new Evento();
 		evento.concatEvento(lnAtual.getEvento());
 		
-		int i = 2;
 		while(br.ready()) {
 			lnAnterior = lnAtual;
 			lnAtual = new Linha(br.readLine().split(";"));
 			
 			if(testaMesmaPessoa(lnAnterior, lnAtual)) {
 				if(!testaJanela(lnAnterior, lnAtual)) {
+					evento.finalizaEventoCod();
 					p.addEvento(evento);
 					evento = new Evento();
 				}
 				evento.concatEvento(lnAtual.getEvento());
 			} else {
+				evento.finalizaEventoCod();
 				p.addEvento(evento);
 				pessoas.add(p);
 				p = new Pessoa(lnAtual.getCodPessoa(), new Turma(lnAtual.getCodTurma()), lnAtual.getResultado());
@@ -47,28 +57,42 @@ public class Main {
 				evento.concatEvento(lnAtual.getEvento());
 			}
 			if(!br.ready()) {
+				evento.finalizaEventoCod();
 				p.addEvento(evento);
 				pessoas.add(p);
 			}
-			
-			
 		}
-		
-		for (Pessoa pessoa : pessoas) {
-			System.out.println(pessoa);
-			if(pessoa.getCodPessoa() == 7690) {
-				break;
+		montarLinha(pessoas);
+	}
+	
+	static void montarLinha(List<Pessoa> lista) {
+		StringBuilder sb;
+		for (Pessoa pessoa : lista) {
+			sb = new StringBuilder();
+			sb.append(pessoa.getTurma().getCodTurma()).append(";").append(pessoa.getCodPessoa()).append(";")
+			  .append(pessoa.getId()).append(";").append(pessoa.getResultado()).append(";");
+			
+			Iterator<Evento> eventosIterator = pessoa.getEventos().iterator();
+			while (eventosIterator.hasNext()) {
+				escreverLinha(sb.toString() + eventosIterator.next().getEventoCod() + "\n");
 			}
 		}
-		System.out.println(pessoas.size());
-		System.out.println(i);
 	}
-
-	private static boolean testaMesmaPessoa(Linha lnAnterior, Linha lnAtual) {
+	
+	static void escreverLinha(String linha) {
+		Path file = Paths.get("../" + nomeArquivo + "Output" + extensao);
+		try {
+			Files.write(file, linha.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+		} catch (IOException e) {
+			System.out.println(e.toString());
+		}
+	}
+	
+	static boolean testaMesmaPessoa(Linha lnAnterior, Linha lnAtual) {
 		return lnAnterior.getCodPessoa().equals(lnAtual.getCodPessoa());
 	}
 
-	private static boolean testaJanela(Linha lnAnterior, Linha lnAtual) {
+	static boolean testaJanela(Linha lnAnterior, Linha lnAtual) {
 		return (lnAtual.getDataSegundos() - lnAnterior.getDataSegundos()) <= 60;
 	}
 }
