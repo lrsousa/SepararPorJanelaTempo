@@ -62,34 +62,42 @@ public class Main {
 				pessoas.add(p);
 			}
 		}
-		montarLinha(pessoas);
+		List<String> linhas = montarLinhas(pessoas);
+		escreverArquivo(linhas);
 	}
 	
-	static void montarLinha(List<Pessoa> lista) {
+	static List<String> montarLinhas(List<Pessoa> pessoas) {
+		List<String> lista = new ArrayList<String>();
+		
 		StringBuilder sb;
-		for (Pessoa pessoa : lista) {
+		for (Pessoa pessoa : pessoas) {
 			sb = new StringBuilder();
 			sb.append(pessoa.getTurma().getCodTurma()).append(";").append(pessoa.getCodPessoa()).append(";")
 			  .append(pessoa.getId()).append(";").append(pessoa.getResultado()).append(";");
 			
 			Iterator<Evento> eventosIterator = pessoa.getEventos().iterator();
+			
 			while (eventosIterator.hasNext()) {
-				escreverLinha(sb.toString() + eventosIterator.next().getEventoCod() + "\n");
+				String linha = sb.toString() + eventosIterator.next().getEventoCod();
+				System.out.println(linha);
+				lista.add(linha);
 			}
 		}
+		System.out.println("ULTIMA LINHA: " + lista.get(lista.size()-1));
+		return lista;
 	}
 	
-	static void escreverLinha(String linha) {
+	static void escreverArquivo(List<String> lista) {
 		Path file = Paths.get("../" + nomeArquivo + "Output" + extensao);
 		try {
-			Files.write(file, linha.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+			Files.write(file, lista,StandardCharsets.UTF_8, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
 		} catch (IOException e) {
 			System.out.println(e.toString());
 		}
 	}
 	
 	static boolean testaMesmaPessoa(Linha lnAnterior, Linha lnAtual) {
-		return lnAnterior.getCodPessoa().equals(lnAtual.getCodPessoa());
+		return (lnAnterior.getCodPessoa().equals(lnAtual.getCodPessoa()) && lnAnterior.getCodTurma().equals(lnAtual.getCodTurma()));
 	}
 
 	static boolean testaJanela(Linha lnAnterior, Linha lnAtual) {
